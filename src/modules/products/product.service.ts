@@ -39,13 +39,15 @@ export class ProductService {
     */
 
     const product = await productRepo.findOne({
-      where: { id, status: ProductStatus.APPROVED },
+      where: { id, status: ProductStatus.PENDING },
       relations: ["bids"],
     });
 
     if (!product) {
       throw new Error("Product not found");
     }
+
+    console.log("product: ", product);
 
     const highestBid =
       product.bids?.length > 0

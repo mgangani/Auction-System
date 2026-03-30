@@ -8,6 +8,8 @@ import { UserController } from './../modules/users/user.controller';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ProductController } from './../modules/products/products.controller';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { ManagerController } from './../modules/manager/manager.controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AuthController } from './../modules/auth/auth.controller';
 import { expressAuthentication } from './../middlewares/authentication';
 // @ts-ignore - no great way to install types from subpackage
@@ -302,6 +304,99 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'createProduct',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsManagerController_getPendingProducts: Record<string, TsoaRoute.ParameterSchema> = {
+        };
+        app.get('/api/manager/products',
+            authenticateMiddleware([{"jwt":["manager","superadmin"]}]),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController)),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController.prototype.getPendingProducts)),
+
+            async function ManagerController_getPendingProducts(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsManagerController_getPendingProducts, request, response });
+
+                const controller = new ManagerController();
+
+              await templateService.apiHandler({
+                methodName: 'getPendingProducts',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsManagerController_approveProduct: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.patch('/api/manager/products/:id/approve',
+            authenticateMiddleware([{"jwt":["manager","superadmin"]}]),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController)),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController.prototype.approveProduct)),
+
+            async function ManagerController_approveProduct(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsManagerController_approveProduct, request, response });
+
+                const controller = new ManagerController();
+
+              await templateService.apiHandler({
+                methodName: 'approveProduct',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsManagerController_rejectProduct: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}}},
+        };
+        app.patch('/api/manager/products/:id/reject',
+            authenticateMiddleware([{"jwt":["manager","superadmin"]}]),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController)),
+            ...(fetchMiddlewares<RequestHandler>(ManagerController.prototype.rejectProduct)),
+
+            async function ManagerController_rejectProduct(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsManagerController_rejectProduct, request, response });
+
+                const controller = new ManagerController();
+
+              await templateService.apiHandler({
+                methodName: 'rejectProduct',
                 controller,
                 response,
                 next,
