@@ -1,8 +1,7 @@
 import { AppDataSource } from "../../config/database";
 import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
-// import { redisClient } from '../../config/redis';
-// import { auctionQueue, notificationQueue } from '../../jobs/queues';
+import { auctionQueue, notificationQueue } from "../../jobs/queues";
 
 const productRepo = AppDataSource.getRepository(Product);
 
@@ -10,17 +9,16 @@ export class ManagerService {
   async getPendingProducts() {
     const [products, total] = await productRepo.findAndCount({
       where: { status: ProductStatus.PENDING },
-    //   skip: (page - 1) * limit,
-    //   take: limit,
       order: { created_at: "DESC" },
     });
 
-    return { data: products, total};
+    return { data: products, total };
   }
 
   async approveProduct(productId: string) {
     const product = await productRepo.findOne({
       where: { id: productId },
+      relations: ["seller"],
     });
 
     if (!product) {
@@ -31,42 +29,42 @@ export class ManagerService {
       throw new Error("Only pending products can be approved");
     }
 
-    product.status = ProductStatus.APPROVED;
+    if (new Date(product.bidding_end_time) <= new Date()) {
+      throw new Error("Cannot approve expired product");
+    }
 
+    product.status = ProductStatus.APPROVED;
     await productRepo.save(product);
 
-    // 🧠 Calculate delay for auction end job
+    // 🧠 Schedule auction end job
     const delay = new Date(product.bidding_end_time).getTime() - Date.now();
 
     if (delay > 0) {
-      /*
       await auctionQueue.add(
-        'auction-end',
+        "end-auction",
         { productId: product.id },
         {
           delay,
-          jobId: `auction-end:${product.id}`,
-        }
+          jobId: `auction-end-${product.id}`,
+          removeOnComplete: true,
+        },
       );
-      */
-      console.log(`Scheduled auction end job for ${product.id}`);
     }
 
-    // 🔔 Notification job
-    /*
-    await notificationQueue.add('listing_approved', {
-      productId: product.id,
-      sellerId: product.seller_id,
-    });
-    */
+    await notificationQueue.add(
+      "listing_approved",
+      {
+        type: "listing_approved",
+        productId: product.id,
+        sellerId: product.seller.id,
+      },
+      {
+        jobId: `notification-${product.id}`,
+        removeOnComplete: true,
+      },
+    );
 
-    // 🧹 Cache invalidation
-    /*
-    await redisClient.del(`product:${product.id}`);
-    await redisClient.del('products:approved');
-    */
-
-    return { message: "Product approved" };
+    return { message: "Product approved & auction scheduled" };
   }
 
   async rejectProduct(productId: string, reason?: string) {
@@ -84,16 +82,7 @@ export class ManagerService {
 
     product.status = ProductStatus.REJECTED;
 
-    // Optional: store reason if you add column later
-    // product.rejection_reason = reason;
-
     await productRepo.save(product);
-
-    // 🧹 Cache invalidation
-    /*
-    await redisClient.del(`product:${product.id}`);
-    await redisClient.del('products:approved');
-    */
 
     return { message: "Product rejected" };
   }
