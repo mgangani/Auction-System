@@ -10,6 +10,8 @@ import { ProductController } from './../modules/products/products.controller';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ManagerController } from './../modules/manager/manager.controller';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { BidController } from './../modules/bids/bids.controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AuthController } from './../modules/auth/auth.controller';
 import { expressAuthentication } from './../middlewares/authentication';
 // @ts-ignore - no great way to install types from subpackage
@@ -90,6 +92,14 @@ const models: TsoaRoute.Models = {
             "starting_price": {"dataType":"double","required":true},
             "bidding_start_time": {"dataType":"string","required":true},
             "bidding_end_time": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PlaceBidDto": {
+        "dataType": "refObject",
+        "properties": {
+            "amount": {"dataType":"double","required":true},
         },
         "additionalProperties": false,
     },
@@ -397,6 +407,71 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'rejectProduct',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsBidController_getBidHistory: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                page: {"default":1,"in":"query","name":"page","dataType":"double"},
+                limit: {"default":10,"in":"query","name":"limit","dataType":"double"},
+        };
+        app.get('/api/products/:id/bids',
+            ...(fetchMiddlewares<RequestHandler>(BidController)),
+            ...(fetchMiddlewares<RequestHandler>(BidController.prototype.getBidHistory)),
+
+            async function BidController_getBidHistory(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsBidController_getBidHistory, request, response });
+
+                const controller = new BidController();
+
+              await templateService.apiHandler({
+                methodName: 'getBidHistory',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsBidController_placeBid: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"PlaceBidDto"},
+        };
+        app.post('/api/products/:id/bids',
+            authenticateMiddleware([{"jwt":["user"]}]),
+            ...(fetchMiddlewares<RequestHandler>(BidController)),
+            ...(fetchMiddlewares<RequestHandler>(BidController.prototype.placeBid)),
+
+            async function BidController_placeBid(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsBidController_placeBid, request, response });
+
+                const controller = new BidController();
+
+              await templateService.apiHandler({
+                methodName: 'placeBid',
                 controller,
                 response,
                 next,

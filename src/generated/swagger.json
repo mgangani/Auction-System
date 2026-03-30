@@ -219,6 +219,19 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"PlaceBidDto": {
+				"properties": {
+					"amount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"amount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"RegisterDto": {
 				"properties": {
 					"name": {
@@ -720,6 +733,175 @@
 									}
 								},
 								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/products/{id}/bids": {
+			"get": {
+				"operationId": "GetBidHistory",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"limit": {
+											"type": "number",
+											"format": "double"
+										},
+										"page": {
+											"type": "number",
+											"format": "double"
+										},
+										"total": {
+											"type": "number",
+											"format": "double"
+										},
+										"data": {
+											"items": {
+												"properties": {
+													"bidder": {
+														"properties": {
+															"name": {
+																"type": "string"
+															},
+															"id": {
+																"type": "string"
+															}
+														},
+														"required": [
+															"name",
+															"id"
+														],
+														"type": "object"
+													},
+													"created_at": {
+														"type": "string",
+														"format": "date-time"
+													},
+													"amount": {
+														"type": "number",
+														"format": "double"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"bidder",
+													"created_at",
+													"amount",
+													"id"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"limit",
+										"page",
+										"total",
+										"data"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Bids"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"default": 1,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "PlaceBid",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"amount": {
+											"type": "number",
+											"format": "double"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"amount",
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Bids"
+				],
+				"security": [
+					{
+						"jwt": [
+							"user"
+						]
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PlaceBidDto"
 							}
 						}
 					}

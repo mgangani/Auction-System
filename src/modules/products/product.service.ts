@@ -17,7 +17,7 @@ export class ProductService {
   */
 
     const products = await productRepo.find({
-      where: { status: ProductStatus.PENDING },
+      where: { status: ProductStatus.APPROVED },
       order: { created_at: "DESC" },
     });
 
