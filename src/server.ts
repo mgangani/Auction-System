@@ -11,6 +11,7 @@ async function startServer() {
     await AppDataSource.initialize();
     console.log("DB connected");
 
+    require("./jobs/workers");
     const app = createApp();
 
     app.listen(PORT, () => {
