@@ -38,7 +38,7 @@ export class Product {
   starting_price!: number;
 
   @Column({ type: "decimal" })
-  current_highest_bid!: number;
+  current_highest_bid?: number;
 
   @Column({ type: "timestamp" })
   bidding_start_time!: Date;

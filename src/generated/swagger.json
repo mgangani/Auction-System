@@ -15,6 +15,210 @@
 				],
 				"type": "string"
 			},
+			"Product": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"seller": {
+						"$ref": "#/components/schemas/User"
+					},
+					"winner": {
+						"$ref": "#/components/schemas/User"
+					},
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"starting_price": {
+						"type": "number",
+						"format": "double"
+					},
+					"current_highest_bid": {
+						"type": "number",
+						"format": "double"
+					},
+					"bidding_start_time": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"bidding_end_time": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ProductStatus"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"bids": {
+						"items": {
+							"$ref": "#/components/schemas/Bid"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"seller",
+					"name",
+					"description",
+					"images",
+					"starting_price",
+					"bidding_start_time",
+					"bidding_end_time",
+					"status",
+					"created_at",
+					"updated_at",
+					"bids"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"User": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"password_hash": {
+						"type": "string"
+					},
+					"google_id": {
+						"type": "string"
+					},
+					"role": {
+						"$ref": "#/components/schemas/UserRole"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"products": {
+						"items": {
+							"$ref": "#/components/schemas/Product"
+						},
+						"type": "array"
+					},
+					"wonProducts": {
+						"items": {
+							"$ref": "#/components/schemas/Product"
+						},
+						"type": "array"
+					},
+					"bids": {
+						"items": {
+							"$ref": "#/components/schemas/Bid"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"email",
+					"role",
+					"created_at",
+					"updated_at",
+					"products",
+					"wonProducts",
+					"bids"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Bid": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"product": {
+						"$ref": "#/components/schemas/Product"
+					},
+					"bidder": {
+						"$ref": "#/components/schemas/User"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": [
+					"id",
+					"product",
+					"bidder",
+					"amount",
+					"created_at"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ProductStatus": {
+				"enum": [
+					"pending",
+					"approved",
+					"rejected",
+					"sold",
+					"expired"
+				],
+				"type": "string"
+			},
+			"CreateProductDto": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"starting_price": {
+						"type": "number",
+						"format": "double"
+					},
+					"bidding_start_time": {
+						"type": "string"
+					},
+					"bidding_end_time": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"description",
+					"starting_price",
+					"bidding_start_time",
+					"bidding_end_time"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"RegisterDto": {
 				"properties": {
 					"name": {
@@ -176,6 +380,198 @@
 						}
 					}
 				}
+			}
+		},
+		"/api/products": {
+			"get": {
+				"operationId": "GetProducts",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Product"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Products"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "CreateProduct",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Product"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Products"
+				],
+				"security": [
+					{
+						"jwt": [
+							"user"
+						]
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateProductDto"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/products/my": {
+			"get": {
+				"operationId": "GetMyProducts",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Product"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Products"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/api/products/{id}": {
+			"get": {
+				"operationId": "GetProduct",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"bids": {
+											"items": {
+												"$ref": "#/components/schemas/Bid"
+											},
+											"type": "array"
+										},
+										"updated_at": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"created_at": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"status": {
+											"$ref": "#/components/schemas/ProductStatus"
+										},
+										"bidding_end_time": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"bidding_start_time": {
+											"type": "string",
+											"format": "date-time"
+										},
+										"starting_price": {
+											"type": "number",
+											"format": "double"
+										},
+										"images": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"description": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"winner": {
+											"$ref": "#/components/schemas/User"
+										},
+										"seller": {
+											"$ref": "#/components/schemas/User"
+										},
+										"id": {
+											"type": "string"
+										},
+										"current_highest_bid": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"bids",
+										"updated_at",
+										"created_at",
+										"status",
+										"bidding_end_time",
+										"bidding_start_time",
+										"starting_price",
+										"images",
+										"description",
+										"name",
+										"seller",
+										"id",
+										"current_highest_bid"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Products"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/api/auth/register": {
