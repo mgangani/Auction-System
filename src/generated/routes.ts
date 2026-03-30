@@ -22,11 +22,6 @@ const models: TsoaRoute.Models = {
         "enums": ["superadmin","manager","user"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "UserRole.MANAGER": {
-        "dataType": "refEnum",
-        "enums": ["manager"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RegisterDto": {
         "dataType": "refObject",
         "properties": {
@@ -96,7 +91,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsUserController_updateRole: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"ref":"UserRole.MANAGER","required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"ref":"UserRole","required":true}}},
         };
         app.patch('/api/users/:id/role',
             authenticateMiddleware([{"jwt":["superadmin"]}]),

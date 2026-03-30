@@ -25,7 +25,7 @@ export class UserController extends Controller {
 
   @Patch("/:id/role")
   @Security("jwt", [UserRole.SUPERADMIN])
-  async updateRole(@Path() id: string, @Body() body: { role: UserRole.MANAGER }) {
+  async updateRole(@Path() id: string, @Body() body: { role: UserRole }) {
     return this.userService.updateRole(id, body.role);
   }
 }

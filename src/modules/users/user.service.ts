@@ -22,7 +22,7 @@ export class UserService {
     };
   }
 
-  async updateRole(userId: string, role: UserRole.MANAGER) {
+  async updateRole(userId: string, role: UserRole) {
     const user = await userRepo.findOne({
       where: { id: userId },
     });
@@ -31,8 +31,6 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    console.log("user" , user);
-    // 🔴 Important rule
     if (user.role === UserRole.SUPERADMIN) {
       throw new Error("Cannot modify superadmin");
     }

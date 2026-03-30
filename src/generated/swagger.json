@@ -15,12 +15,6 @@
 				],
 				"type": "string"
 			},
-			"UserRole.MANAGER": {
-				"enum": [
-					"manager"
-				],
-				"type": "string"
-			},
 			"RegisterDto": {
 				"properties": {
 					"name": {
@@ -171,7 +165,7 @@
 							"schema": {
 								"properties": {
 									"role": {
-										"$ref": "#/components/schemas/UserRole.MANAGER"
+										"$ref": "#/components/schemas/UserRole"
 									}
 								},
 								"required": [
@@ -195,11 +189,31 @@
 								"schema": {
 									"properties": {
 										"refreshToken": {},
-										"accessToken": {}
+										"accessToken": {},
+										"user": {
+											"properties": {
+												"role": {
+													"$ref": "#/components/schemas/UserRole"
+												},
+												"email": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"role",
+												"email",
+												"id"
+											],
+											"type": "object"
+										}
 									},
 									"required": [
 										"refreshToken",
-										"accessToken"
+										"accessToken",
+										"user"
 									],
 									"type": "object"
 								}
@@ -235,11 +249,31 @@
 								"schema": {
 									"properties": {
 										"refreshToken": {},
-										"accessToken": {}
+										"accessToken": {},
+										"user": {
+											"properties": {
+												"role": {
+													"$ref": "#/components/schemas/UserRole"
+												},
+												"email": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"role",
+												"email",
+												"id"
+											],
+											"type": "object"
+										}
 									},
 									"required": [
 										"refreshToken",
-										"accessToken"
+										"accessToken",
+										"user"
 									],
 									"type": "object"
 								}
@@ -275,11 +309,31 @@
 								"schema": {
 									"properties": {
 										"refreshToken": {},
-										"accessToken": {}
+										"accessToken": {},
+										"user": {
+											"properties": {
+												"role": {
+													"$ref": "#/components/schemas/UserRole"
+												},
+												"email": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"role",
+												"email",
+												"id"
+											],
+											"type": "object"
+										}
 									},
 									"required": [
 										"refreshToken",
-										"accessToken"
+										"accessToken",
+										"user"
 									],
 									"type": "object"
 								}
