@@ -2,6 +2,7 @@ import { AppDataSource } from "../../config/database";
 import { Product } from "../../entity/Product";
 import { Bid } from "../../entity/Bid";
 import { ProductStatus } from "../../types/enums";
+import { getIO } from "../../sockets";
 // import { redisClient } from '../../config/redis';
 // import { io } from '../../sockets';
 
@@ -75,6 +76,12 @@ export class BidService {
       */
     }
 
+    const io = getIO();
+    io.to(`auction:${productId}`).emit("new_bid", {
+      productId,
+      amount,
+      userId,
+    });
     // 🔟 Emit socket event
     /*
     io.to(`auction:${productId}`).emit("new_bid", {

@@ -5,6 +5,7 @@ import { Product } from "../entity/Product";
 import { Bid } from "../entity/Bid";
 import { ProductStatus } from "../types/enums";
 import { notificationQueue } from "./queues";
+import { getIO } from "../sockets";
 
 export const auctionWorker = new Worker(
   "auction-queue",
@@ -20,6 +21,7 @@ export const auctionWorker = new Worker(
 
     const product = await productRepo.findOne({
       where: { id: productId },
+      relations: ["seller"],
     });
 
     if (!product) {
@@ -33,6 +35,7 @@ export const auctionWorker = new Worker(
 
     const highestBid = await bidRepo
       .createQueryBuilder("bid")
+      .leftJoinAndSelect("bid.bidder", "bidder")
       .where("bid.product_id = :productId", { productId })
       .orderBy("bid.amount", "DESC")
       .getOne();
@@ -49,7 +52,7 @@ export const auctionWorker = new Worker(
       await notificationQueue.add("notify", {
         type: "auction_ended",
         productId,
-        sellerId: product.seller?.id,
+        sellerId: product.seller.id,
         winnerId: highestBid.bidder.id,
         finalAmount: Number(highestBid.amount),
       });
@@ -62,7 +65,7 @@ export const auctionWorker = new Worker(
       await notificationQueue.add("notify", {
         type: "auction_ended",
         productId,
-        sellerId: product.seller?.id,
+        sellerId: product.seller.id,
       });
     }
 
@@ -80,20 +83,27 @@ export const auctionWorker = new Worker(
 export const notificationWorker = new Worker(
   "notification-queue",
   async (job) => {
-    console.log("Notification worker started");
+    const io = getIO();
     const data = job.data;
 
-    console.log("Notification job:", data);
-
-    // Example:
-    // send email / push / websocket
-
     if (data.type === "listing_approved") {
-      console.log(`Notify seller ${data.sellerId}`);
+      io.to(`user:${data.sellerId}`).emit("listing_approved", {
+        productId: data.productId,
+      });
     }
 
     if (data.type === "auction_ended") {
-      console.log(`Notify winner ${data.winnerId}`);
+      if (data.winnerId) {
+        io.to(`user:${data.winnerId}`).emit("auction_won", {
+          productId: data.productId,
+          amount: data.finalAmount!,
+        });
+      }
+
+      io.to(`user:${data.sellerId}`).emit("product_sold", {
+        productId: data.productId,
+        amount: data.finalAmount,
+      });
     }
   },
   {

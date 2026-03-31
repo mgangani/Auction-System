@@ -45,8 +45,13 @@ export class ManagerService {
         { productId: product.id },
         {
           delay,
-          jobId: `auction-end-${product.id}`,
+          jobId: `auction-end-${productId}`,
           removeOnComplete: true,
+          attempts: 3,
+          backoff: {
+            type: "exponential",
+            delay: 2000,
+          },
         },
       );
     }
