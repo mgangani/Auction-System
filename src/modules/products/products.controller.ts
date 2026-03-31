@@ -4,7 +4,6 @@ import {
   Post,
   Route,
   Tags,
-  Query,
   Path,
   Security,
   Request,

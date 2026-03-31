@@ -75,13 +75,6 @@ export const auctionWorker = new Worker(
         sellerId: product.seller.id,
       });
     }
-
-    // 🧹 Invalidate Redis cache
-    /*
-    await redisClient.del(`product:${productId}`);
-    await redisClient.del(`highest_bid:${productId}`);
-    await redisClient.del("products:approved");
-    */
   },
   {
     connection: redisConnection,

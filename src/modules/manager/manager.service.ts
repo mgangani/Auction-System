@@ -20,7 +20,6 @@ export class ManagerService {
   async updateProductStatus(
     productId: string,
     status: ProductStatus,
-    reason?: string,
   ) {
     const product = await productRepo.findOne({
       where: { id: productId },
@@ -31,12 +30,12 @@ export class ManagerService {
       throw new Error("Product not found");
     }
 
-    // ✅ Only allow transition from PENDING
+    // Only allow transition from PENDING
     if (product.status !== ProductStatus.PENDING) {
       throw new Error("Only pending products can be updated");
     }
 
-    // ✅ Handle APPROVAL
+    // Handle APPROVAL
     if (status === ProductStatus.APPROVED) {
       if (new Date(product.bidding_end_time) <= new Date()) {
         throw new Error("Cannot approve expired product");
@@ -45,7 +44,7 @@ export class ManagerService {
       product.status = ProductStatus.APPROVED;
       await productRepo.save(product);
 
-      // 🧠 Schedule auction end job
+      // Schedule auction end job
       const delay = new Date(product.bidding_end_time).getTime() - Date.now();
 
       if (delay > 0) {
@@ -65,7 +64,6 @@ export class ManagerService {
         );
       }
 
-      // 🔔 Notify seller
       await notificationQueue.add(
         "listing_approved",
         {
@@ -79,31 +77,22 @@ export class ManagerService {
         },
       );
 
-      // 🧹 Cache invalidation
       await invalidatePattern("products:approved");
       await redisConnection.del(`product:${productId}`);
 
       return { message: "Product approved & auction scheduled" };
     }
 
-    // ❌ Handle REJECTION
+    // Handle REJECTION
     if (status === ProductStatus.REJECTED) {
       product.status = ProductStatus.REJECTED;
 
-      // (optional) you can store reason in DB if column exists
-      // product.rejection_reason = reason;
-
       await productRepo.save(product);
-
-      // 🔔 (optional) notify seller for rejection
-      // await notificationQueue.add(...)
 
       await redisConnection.del(`product:${productId}`);
 
       return { message: "Product rejected" };
     }
-
-    // ❌ Invalid status
     throw new Error("Invalid status update");
   }
 }

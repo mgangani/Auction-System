@@ -1056,43 +1056,6 @@
 				}
 			}
 		},
-		"/api/auth/logout": {
-			"post": {
-				"operationId": "Logout",
-				"responses": {
-					"204": {
-						"description": "No content"
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"properties": {
-									"token": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"token"
-								],
-								"type": "object"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/api/auth/success": {
 			"get": {
 				"operationId": "GoogleSuccess",

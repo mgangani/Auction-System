@@ -3,20 +3,12 @@ import { Bid } from "../../entity/Bid";
 import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
 import { getOrSet } from "../../utils/cache";
-// import { redisClient } from '../../config/redis'; // later
 import { CreateProductDto } from "./products.dto";
 
 const productRepo = AppDataSource.getRepository(Product);
 
 export class ProductService {
   async getApprovedProducts() {
-    // const cacheKey = `products:approved`;
-
-    /*
-  const cached = await redisClient.get(cacheKey);
-  if (cached) return JSON.parse(cached);
-  */
-
     const key = `products:approved`;
     return getOrSet(key, 60, async () => {
       const products = await productRepo.find({

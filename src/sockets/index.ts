@@ -11,7 +11,7 @@ export const initSocket = (httpServer: any) => {
     },
   });
 
-  // 🔐 Auth middleware
+  //Auth middleware
   io.use((socket, next) => {
     try {
       const token = socket.handshake.query?.token;
@@ -34,7 +34,7 @@ export const initSocket = (httpServer: any) => {
 
     console.log("Socket connected:", userId);
 
-    // 👤 Join personal room
+    // Join personal room
     socket.join(`user:${userId}`);
 
     // 🏷 Join auction room

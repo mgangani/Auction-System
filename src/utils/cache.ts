@@ -20,7 +20,7 @@ export async function getOrSet<T>(
   } catch (err) {
     console.error("Cache error:", err);
 
-    // 🔴 NEVER break app because of cache
+    // NEVER break app because of cache
     return fetchFn();
   }
 }

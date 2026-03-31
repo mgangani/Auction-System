@@ -33,11 +33,11 @@ export class AuthController extends Controller {
     return this.authService.refresh(body.refreshToken);
   }
 
-  @Post("/logout")
-  @Security("jwt")
-  async logout(@Body() body: { token: string }) {
-    return this.authService.logout(body.token);
-  }
+  // @Post("/logout")
+  // @Security("jwt")
+  // async logout(@Body() body: { token: string }) {
+  //   return this.authService.logout(body.token);
+  // }
 
   @Get("/success")
   async googleSuccess(

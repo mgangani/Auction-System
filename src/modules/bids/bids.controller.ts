@@ -20,12 +20,8 @@ export class BidController extends Controller {
   private service = new BidService();
 
   @Get("/:id/bids")
-  async getBidHistory(
-    @Path() id: string,
-    @Query() page: number = 1,
-    @Query() limit: number = 10,
-  ) {
-    return this.service.getBidHistory(id, page, limit);
+  async getBidHistory(@Path() id: string) {
+    return this.service.getBidHistory(id);
   }
 
   @Post("/:id/bids")

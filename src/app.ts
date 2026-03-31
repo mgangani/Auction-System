@@ -44,8 +44,8 @@ export const createApp = () => {
      },
    );
 
-  // ✅ THIS IS REQUIRED
-  RegisterRoutes(app);
+//setup routes
+   RegisterRoutes(app);
 
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

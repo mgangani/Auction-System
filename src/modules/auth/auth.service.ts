@@ -58,8 +58,6 @@ export class AuthService {
   async refresh(refreshToken: string) {
     try {
       const payload: any = jwt.verify(refreshToken, REFRESH_SECRET);
-
-      // 🔴 Always re-fetch user (important for role updates)
       const user = await userRepo.findOne({
         where: { id: payload.sub },
       });
@@ -74,28 +72,26 @@ export class AuthService {
     }
   }
 
-  async logout(token: string) {
-    const decoded: any = jwt.decode(token);
+  // async logout(token: string) {
+  //   const decoded: any = jwt.decode(token);
 
-    if (!decoded?.jti || !decoded?.exp) return;
+  //   if (!decoded?.jti || !decoded?.exp) return;
 
-    const ttl = decoded.exp - Math.floor(Date.now() / 1000);
+  //   const ttl = decoded.exp - Math.floor(Date.now() / 1000);
 
-    // Redis later
-    console.log(`Blacklist token ${decoded.jti} for ${ttl}s`);
-  }
+  //   // Redis later
+  //   console.log(`Blacklist token ${decoded.jti} for ${ttl}s`);
+  // }
 
   async googleLogin(profile: {
     email: string;
     name: string;
     googleId: string;
   }) {
-    // 1. Try find by google_id first (strong identity)
     let user = await userRepo.findOne({
       where: { google_id: profile.googleId },
     });
 
-    // 2. If not found, try email (account linking)
     if (!user) {
       user = await userRepo.findOne({
         where: { email: profile.email },
@@ -109,7 +105,6 @@ export class AuthService {
       }
     }
 
-    // 3. If still not found → create
     if (!user) {
       user = userRepo.create({
         name: profile.name,
