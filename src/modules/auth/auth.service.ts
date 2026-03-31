@@ -18,7 +18,15 @@ export class AuthService {
     const existing = await userRepo.findOne({ where: { email: data.email } });
 
     if (existing) {
-      throw new Error("Email already in use");
+      if (existing.password_hash) {
+        throw new Error("Email already in use");
+      }
+
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+      existing.password_hash = hashedPassword;
+      await userRepo.save(existing);
+
+      return this.generateTokens(existing);
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
@@ -98,7 +106,6 @@ export class AuthService {
       });
 
       if (user) {
-        // 🔗 Link Google account
         user.google_id = profile.googleId;
         user.provider = "GOOGLE";
         await userRepo.save(user);
@@ -132,7 +139,7 @@ export class AuthService {
         role: user.role,
       },
       JWT_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "15h" },
     );
 
     const refreshToken = jwt.sign(

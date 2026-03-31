@@ -78,6 +78,7 @@ export const auctionWorker = new Worker(
   },
   {
     connection: redisConnection,
+    concurrency: 10,
   },
 );
 export const notificationWorker = new Worker(

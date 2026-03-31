@@ -6,6 +6,7 @@ import * as swaggerDocument from "./generated/swagger.json";
 import passport from "./config/passport";
 import { errorHandler } from "./middlewares/errorHandler";
 import { AuthService } from "./modules/auth/auth.service";
+import { serverAdapter as bullBoardAdapter } from "./jobs/bullBoard";
 
 export const createApp = () => {
   const app = express();
@@ -47,6 +48,8 @@ export const createApp = () => {
 
 //setup routes
    RegisterRoutes(app);
+
+  app.use("/api/admin/queues", bullBoardAdapter.getRouter());
 
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
