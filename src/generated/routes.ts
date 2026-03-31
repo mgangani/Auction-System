@@ -57,6 +57,7 @@ const models: TsoaRoute.Models = {
             "email": {"dataType":"string","required":true},
             "password_hash": {"dataType":"string"},
             "google_id": {"dataType":"string"},
+            "provider": {"dataType":"string"},
             "role": {"ref":"UserRole","required":true},
             "created_at": {"dataType":"datetime","required":true},
             "updated_at": {"dataType":"datetime","required":true},
@@ -562,6 +563,37 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'logout',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuthController_googleSuccess: Record<string, TsoaRoute.ParameterSchema> = {
+                accessToken: {"in":"query","name":"accessToken","dataType":"string"},
+                refreshToken: {"in":"query","name":"refreshToken","dataType":"string"},
+        };
+        app.get('/api/auth/success',
+            ...(fetchMiddlewares<RequestHandler>(AuthController)),
+            ...(fetchMiddlewares<RequestHandler>(AuthController.prototype.googleSuccess)),
+
+            async function AuthController_googleSuccess(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuthController_googleSuccess, request, response });
+
+                const controller = new AuthController();
+
+              await templateService.apiHandler({
+                methodName: 'googleSuccess',
                 controller,
                 response,
                 next,

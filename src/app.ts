@@ -3,6 +3,8 @@ import cors from "cors";
 import { RegisterRoutes } from "./generated/routes";
 import swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from "./generated/swagger.json";
+import passport from "./config/passport";
+import { AuthService } from "./modules/auth/auth.service";
 
 export const createApp = () => {
   const app = express();
@@ -10,10 +12,42 @@ export const createApp = () => {
   app.use(cors());
   app.use(express.json());
 
+  app.use(passport.initialize());
+
+   // Google OAuth routes (kept outside TSOA to avoid decorator constraints)
+   const authService = new AuthService();
+
+   app.get(
+     "/api/auth/google",
+     (req, res, next) => {
+       console.log("Triggering Google OAuth");
+       next();
+     },
+     passport.authenticate("google", {
+       scope: ["profile", "email"],
+     }),
+   );
+
+   app.get(
+     "/api/auth/google/callback",
+     (req, res, next) => {
+       console.log("Callback triggered");
+       next();
+     },
+     passport.authenticate("google", { session: false }),
+     async (req: any, res) => {
+       const tokens = await authService.googleLogin(req.user);
+
+       res.redirect(
+         `http://localhost:3000/api/auth/success?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+       );
+     },
+   );
+
   // ✅ THIS IS REQUIRED
   RegisterRoutes(app);
 
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   return app;
 };

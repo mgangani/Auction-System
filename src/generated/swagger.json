@@ -106,6 +106,9 @@
 					"google_id": {
 						"type": "string"
 					},
+					"provider": {
+						"type": "string"
+					},
 					"role": {
 						"$ref": "#/components/schemas/UserRole"
 					},
@@ -1088,6 +1091,61 @@
 						}
 					}
 				}
+			}
+		},
+		"/api/auth/success": {
+			"get": {
+				"operationId": "GoogleSuccess",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"refreshToken": {
+											"type": "string"
+										},
+										"accessToken": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"refreshToken",
+										"accessToken",
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "accessToken",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "refreshToken",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},

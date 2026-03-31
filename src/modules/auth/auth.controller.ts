@@ -1,4 +1,14 @@
-import { Body, Controller, Post, Route, Tags, SuccessResponse, Security } from "tsoa";
+import {
+  Body,
+  Controller,
+  Post,
+  Route,
+  Tags,
+  SuccessResponse,
+  Security,
+  Get,
+  Query,
+} from "tsoa";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto } from "./auth.dto";
 
@@ -27,5 +37,17 @@ export class AuthController extends Controller {
   @Security("jwt")
   async logout(@Body() body: { token: string }) {
     return this.authService.logout(body.token);
+  }
+
+  @Get("/success")
+  async googleSuccess(
+    @Query() accessToken?: string,
+    @Query() refreshToken?: string,
+  ) {
+    return {
+      message: "Google login successful",
+      accessToken,
+      refreshToken,
+    };
   }
 }

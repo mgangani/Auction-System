@@ -23,8 +23,11 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   password_hash?: string;
 
-  @Column({ type: "varchar", nullable: true })
+  @Column({ type: "varchar", nullable: true, unique: true })
   google_id?: string;
+
+  @Column({ type: "varchar", default: "LOCAL" })
+  provider?: string;
 
   @Column({
     type: "enum",

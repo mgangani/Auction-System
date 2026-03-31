@@ -1,6 +1,5 @@
 import { Request } from "express";
 import jwt from "jsonwebtoken";
-// import { redisClient } from '../config/redis'; // later
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -36,27 +35,15 @@ export async function expressAuthentication(
     throw new Error("Unauthorized");
   }
 
-  // 🔴 IMPORTANT: reject refresh tokens for protected routes
   if (decoded.type !== "access") {
     throw new Error("Unauthorized");
   }
 
-  // 🔴 Redis blacklist check (add later)
-  /*
-  const isBlacklisted = await redisClient.get(`blacklist:${decoded.jti}`);
-  if (isBlacklisted) {
-    throw new Error('Unauthorized');
-  }
-  */
-
-  // 🔴 Role-based authorization
   if (scopes && scopes.length > 0) {
     if (!decoded.role || !scopes.includes(decoded.role)) {
       throw new Error("Forbidden");
     }
   }
-
-  // Attach user to request (optional but useful)
   (request as any).user = decoded;
 
   return decoded;

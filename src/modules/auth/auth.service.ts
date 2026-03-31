@@ -85,6 +85,46 @@ export class AuthService {
     console.log(`Blacklist token ${decoded.jti} for ${ttl}s`);
   }
 
+  async googleLogin(profile: {
+    email: string;
+    name: string;
+    googleId: string;
+  }) {
+    // 1. Try find by google_id first (strong identity)
+    let user = await userRepo.findOne({
+      where: { google_id: profile.googleId },
+    });
+
+    // 2. If not found, try email (account linking)
+    if (!user) {
+      user = await userRepo.findOne({
+        where: { email: profile.email },
+      });
+
+      if (user) {
+        // 🔗 Link Google account
+        user.google_id = profile.googleId;
+        user.provider = "GOOGLE";
+        await userRepo.save(user);
+      }
+    }
+
+    // 3. If still not found → create
+    if (!user) {
+      user = userRepo.create({
+        name: profile.name,
+        email: profile.email,
+        google_id: profile.googleId,
+        provider: "GOOGLE",
+        role: UserRole.USER,
+      });
+
+      await userRepo.save(user);
+    }
+
+    return this.generateTokens(user);
+  }
+
   private generateTokens(user: User) {
     const accessJti = uuidv4();
     const refreshJti = uuidv4();
@@ -94,7 +134,7 @@ export class AuthService {
         sub: user.id,
         jti: accessJti,
         type: "access",
-        role: user.role, 
+        role: user.role,
       },
       JWT_SECRET,
       { expiresIn: "15m" },
