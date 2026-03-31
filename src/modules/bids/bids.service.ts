@@ -3,6 +3,7 @@ import { Product } from "../../entity/Product";
 import { Bid } from "../../entity/Bid";
 import { ProductStatus } from "../../types/enums";
 import { getIO } from "../../sockets";
+import { redisConnection } from "../../config/redis";
 // import { redisClient } from '../../config/redis';
 // import { io } from '../../sockets';
 
@@ -63,6 +64,7 @@ export class BidService {
         current_highest_bid: amount,
       });
     });
+    await redisConnection.del(`product:${productId}`);
 
     // 9️⃣ Update Redis cache
     const cacheKey = `highest_bid:${productId}`;

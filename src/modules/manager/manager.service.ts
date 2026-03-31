@@ -2,6 +2,8 @@ import { AppDataSource } from "../../config/database";
 import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
 import { auctionQueue, notificationQueue } from "../../jobs/queues";
+import { invalidatePattern } from "../../utils/cache";
+import { redisConnection } from "../../config/redis";
 
 const productRepo = AppDataSource.getRepository(Product);
 
@@ -69,6 +71,8 @@ export class ManagerService {
       },
     );
 
+    await invalidatePattern("products:approved");
+    await redisConnection.del(`product:${productId}`);
     return { message: "Product approved & auction scheduled" };
   }
 
@@ -86,8 +90,9 @@ export class ManagerService {
     }
 
     product.status = ProductStatus.REJECTED;
-
     await productRepo.save(product);
+
+    // await invalidatePattern(`product:${productId}`);
 
     return { message: "Product rejected" };
   }

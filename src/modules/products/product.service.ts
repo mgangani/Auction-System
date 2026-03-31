@@ -2,6 +2,7 @@ import { AppDataSource } from "../../config/database";
 import { Bid } from "../../entity/Bid";
 import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
+import { getOrSet } from "../../utils/cache";
 // import { redisClient } from '../../config/redis'; // later
 import { CreateProductDto } from "./products.dto";
 
@@ -16,54 +17,39 @@ export class ProductService {
   if (cached) return JSON.parse(cached);
   */
 
-    const products = await productRepo.find({
-      where: { status: ProductStatus.APPROVED },
-      order: { created_at: "DESC" },
+    const key = `products:approved`;
+    return getOrSet(key, 60, async () => {
+      const products = await productRepo.find({
+        where: { status: ProductStatus.APPROVED },
+        order: { created_at: "DESC" },
+      });
+      return products;
     });
-
-    /*
-  await redisClient.set(cacheKey, JSON.stringify(products), {
-    EX: 60,
-  });
-  */
-
-    return products;
   }
 
   async getProductById(id: string) {
-    // const cacheKey = `product:${id}`;
+    const key = `product:${id}`;
 
-    /*
-    const cached = await redisClient.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-    */
+    return getOrSet(key, 30, async () => {
+      const product = await productRepo.findOne({
+        where: { id, status: ProductStatus.APPROVED },
+        relations: ["bids"],
+      });
 
-    const product = await productRepo.findOne({
-      where: { id, status: ProductStatus.PENDING },
-      relations: ["bids"],
+      if (!product) {
+        throw new Error("Product not found");
+      }
+
+      const highestBid =
+        product.bids?.length > 0
+          ? Math.max(...product.bids.map((b) => Number(b.amount)))
+          : Number(product.starting_price);
+
+      return {
+        ...product,
+        current_highest_bid: highestBid,
+      };
     });
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    console.log("product: ", product);
-
-    const highestBid =
-      product.bids?.length > 0
-        ? Math.max(...product.bids.map((b: Bid) => b.amount))
-        : product.starting_price;
-
-    const result = {
-      ...product,
-      current_highest_bid: highestBid,
-    };
-
-    /*
-    await redisClient.set(cacheKey, JSON.stringify(result), { EX: 60 });
-    */
-
-    return result;
   }
 
   async createProduct(userId: string, dto: CreateProductDto, file?: any) {

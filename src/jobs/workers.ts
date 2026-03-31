@@ -6,6 +6,7 @@ import { Bid } from "../entity/Bid";
 import { ProductStatus } from "../types/enums";
 import { notificationQueue } from "./queues";
 import { getIO } from "../sockets";
+import { invalidatePattern } from "../utils/cache";
 
 export const auctionWorker = new Worker(
   "auction-queue",
@@ -46,6 +47,9 @@ export const auctionWorker = new Worker(
       product.current_highest_bid = Number(highestBid.amount);
 
       await productRepo.save(product);
+      await redisConnection.del(`product:${productId}`);
+      await redisConnection.del(`highest_bid:${productId}`);
+      await invalidatePattern("products:approved");
 
       console.log(`✅ Sold to ${highestBid.bidder.id}`);
 
@@ -59,6 +63,9 @@ export const auctionWorker = new Worker(
     } else {
       product.status = ProductStatus.EXPIRED;
       await productRepo.save(product);
+      await redisConnection.del(`product:${productId}`);
+      await redisConnection.del(`highest_bid:${productId}`);
+      await invalidatePattern("products:approved");
 
       console.log("❌ No bids — auction expired");
 
