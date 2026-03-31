@@ -7,8 +7,10 @@ import {
   Path,
   Security,
   Request,
-  Body,
+  FormField,
+  UploadedFiles,
 } from "tsoa";
+import type { Express } from "express";
 import { ProductService } from "./product.service";
 import { CreateProductDto } from "./products.dto";
 import { UserRole } from "../../types/enums";
@@ -35,7 +37,22 @@ export class ProductController extends Controller {
 
   @Post("/")
   @Security("jwt", [UserRole.USER])
-  async createProduct(@Request() req: any, @Body() body: CreateProductDto) {
-    return this.service.createProduct(req.user.sub, body, req.file);
+  async createProduct(
+    @Request() req: any,
+    @UploadedFiles() files: Express.Multer.File[],
+    @FormField() name: string,
+    @FormField() description: string,
+    @FormField() starting_price: number,
+    @FormField() bidding_start_time: string,
+    @FormField() bidding_end_time: string,
+  ) {
+    const body: CreateProductDto = {
+      name,
+      description,
+      starting_price: Number(starting_price),
+      bidding_start_time,
+      bidding_end_time,
+    };
+    return this.service.createProduct(req.user.sub, body, files);
   }
 }

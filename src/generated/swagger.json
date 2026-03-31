@@ -193,35 +193,6 @@
 				],
 				"type": "string"
 			},
-			"CreateProductDto": {
-				"properties": {
-					"name": {
-						"type": "string"
-					},
-					"description": {
-						"type": "string"
-					},
-					"starting_price": {
-						"type": "number",
-						"format": "double"
-					},
-					"bidding_start_time": {
-						"type": "string"
-					},
-					"bidding_end_time": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name",
-					"description",
-					"starting_price",
-					"bidding_start_time",
-					"bidding_end_time"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"PlaceBidDto": {
 				"properties": {
 					"amount": {
@@ -450,9 +421,42 @@
 				"requestBody": {
 					"required": true,
 					"content": {
-						"application/json": {
+						"multipart/form-data": {
 							"schema": {
-								"$ref": "#/components/schemas/CreateProductDto"
+								"type": "object",
+								"properties": {
+									"files": {
+										"items": {
+											"type": "string",
+											"format": "binary"
+										},
+										"type": "array"
+									},
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"type": "string"
+									},
+									"starting_price": {
+										"type": "number",
+										"format": "double"
+									},
+									"bidding_start_time": {
+										"type": "string"
+									},
+									"bidding_end_time": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"files",
+									"name",
+									"description",
+									"starting_price",
+									"bidding_start_time",
+									"bidding_end_time"
+								]
 							}
 						}
 					}
@@ -709,14 +713,6 @@
 							"application/json": {
 								"schema": {
 									"properties": {
-										"limit": {
-											"type": "number",
-											"format": "double"
-										},
-										"page": {
-											"type": "number",
-											"format": "double"
-										},
 										"total": {
 											"type": "number",
 											"format": "double"
@@ -763,8 +759,6 @@
 										}
 									},
 									"required": [
-										"limit",
-										"page",
 										"total",
 										"data"
 									],
@@ -785,26 +779,6 @@
 						"required": true,
 						"schema": {
 							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": false,
-						"schema": {
-							"default": 1,
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": false,
-						"schema": {
-							"default": 10,
-							"format": "double",
-							"type": "number"
 						}
 					}
 				]

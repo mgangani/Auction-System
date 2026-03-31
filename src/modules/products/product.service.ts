@@ -4,6 +4,7 @@ import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
 import { getOrSet } from "../../utils/cache";
 import { CreateProductDto } from "./products.dto";
+import { cloudinary } from "../../config/cloudinary";
 
 const productRepo = AppDataSource.getRepository(Product);
 
@@ -44,7 +45,31 @@ export class ProductService {
     });
   }
 
-  async createProduct(userId: string, dto: CreateProductDto, file?: any) {
+  async createProduct(
+    userId: string,
+    dto: CreateProductDto,
+    files?: Express.Multer.File[],
+  ) {
+    let imageUrls: string[] = [];
+
+    if (files && files.length > 0) {
+      imageUrls = await Promise.all(
+        files.map(
+          (file) =>
+            new Promise<string>((resolve, reject) => {
+              const stream = cloudinary.uploader.upload_stream(
+                { folder: "products" },
+                (error, result) => {
+                  if (error || !result) return reject(error);
+                  resolve((result as any).secure_url);
+                },
+              );
+              stream.end(file.buffer);
+            }),
+        ),
+      );
+    }
+
     const product = productRepo.create({
       name: dto.name,
       description: dto.description,
@@ -54,13 +79,13 @@ export class ProductService {
       bidding_end_time: dto.bidding_end_time,
       seller: { id: userId },
       status: ProductStatus.PENDING,
-      images: file ? [file.path] : [],
+      images: imageUrls,
     });
 
     await productRepo.save(product);
-
     return product;
   }
+
   async getUserProducts(userId: string) {
     return productRepo.find({
       where: { seller: { id: userId } },

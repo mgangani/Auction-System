@@ -4,6 +4,7 @@ import { RegisterRoutes } from "./generated/routes";
 import swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from "./generated/swagger.json";
 import passport from "./config/passport";
+import { errorHandler } from "./middlewares/errorHandler";
 import { AuthService } from "./modules/auth/auth.service";
 
 export const createApp = () => {
@@ -48,6 +49,8 @@ export const createApp = () => {
    RegisterRoutes(app);
 
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  app.use(errorHandler);
 
   return app;
 };

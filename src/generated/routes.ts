@@ -16,6 +16,8 @@ import { AuthController } from './../modules/auth/auth.controller';
 import { expressAuthentication } from './../middlewares/authentication';
 // @ts-ignore - no great way to install types from subpackage
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
+const multer = require('multer');
+
 
 const expressAuthenticationRecasted = expressAuthentication as (req: ExRequest, securityName: string, scopes?: string[], res?: ExResponse) => Promise<any>;
 
@@ -85,18 +87,6 @@ const models: TsoaRoute.Models = {
         "enums": ["pending","approved","rejected","sold","expired"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateProductDto": {
-        "dataType": "refObject",
-        "properties": {
-            "name": {"dataType":"string","required":true},
-            "description": {"dataType":"string","required":true},
-            "starting_price": {"dataType":"double","required":true},
-            "bidding_start_time": {"dataType":"string","required":true},
-            "bidding_end_time": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PlaceBidDto": {
         "dataType": "refObject",
         "properties": {
@@ -132,13 +122,14 @@ const templateService = new ExpressTemplateService(models, {"noImplicitAdditiona
 
 
 
-export function RegisterRoutes(app: Router) {
+export function RegisterRoutes(app: Router,opts?:{multer?:ReturnType<typeof multer>}) {
 
     // ###########################################################################################################
     //  NOTE: If you do not see routes for all of your controllers in this file, then you might not have informed tsoa of where to look
     //      Please look into the "controllerPathGlobs" config option described in the readme: https://github.com/lukeautry/tsoa
     // ###########################################################################################################
 
+    const upload = opts?.multer ||  multer({"limits":{"fileSize":8388608}});
 
     
         const argsUserController_getMe: Record<string, TsoaRoute.ParameterSchema> = {
@@ -296,10 +287,20 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsProductController_createProduct: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"CreateProductDto"},
+                files: {"in":"formData","name":"files","required":true,"dataType":"array","array":{"dataType":"file"}},
+                name: {"in":"formData","name":"name","required":true,"dataType":"string"},
+                description: {"in":"formData","name":"description","required":true,"dataType":"string"},
+                starting_price: {"in":"formData","name":"starting_price","required":true,"dataType":"double"},
+                bidding_start_time: {"in":"formData","name":"bidding_start_time","required":true,"dataType":"string"},
+                bidding_end_time: {"in":"formData","name":"bidding_end_time","required":true,"dataType":"string"},
         };
         app.post('/api/products',
             authenticateMiddleware([{"jwt":["user"]}]),
+            upload.fields([
+                {
+                    name: "files",
+                }
+            ]),
             ...(fetchMiddlewares<RequestHandler>(ProductController)),
             ...(fetchMiddlewares<RequestHandler>(ProductController.prototype.createProduct)),
 
@@ -390,8 +391,6 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsBidController_getBidHistory: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                page: {"default":1,"in":"query","name":"page","dataType":"double"},
-                limit: {"default":10,"in":"query","name":"limit","dataType":"double"},
         };
         app.get('/api/products/:id/bids',
             ...(fetchMiddlewares<RequestHandler>(BidController)),
