@@ -4,29 +4,30 @@ import { AppDataSource } from "../config/database";
 import { Product } from "../entity/Product";
 import { Bid } from "../entity/Bid";
 import { ProductStatus } from "../types/enums";
+import { notificationQueue } from "./queues";
 
 export const auctionWorker = new Worker(
   "auction-queue",
   async (job) => {
-    console.log("Auction worker started");
+    if (job.name !== "end-auction") return;
+
     const { productId } = job.data;
-    console.log("Processing Auction End Job for Product:", productId);
+
+    console.log(`⏳ Ending auction for ${productId}`);
 
     const productRepo = AppDataSource.getRepository(Product);
     const bidRepo = AppDataSource.getRepository(Bid);
 
     const product = await productRepo.findOne({
       where: { id: productId },
-      relations: ["bids"],
     });
 
     if (!product) {
-      console.error("Product not found:", productId);
-      return;
+      throw new Error("Product not found");
     }
 
     if (product.status !== ProductStatus.APPROVED) {
-      console.error("Product is not approved:", productId);
+      console.log("Already processed or not eligible");
       return;
     }
 
@@ -36,23 +37,46 @@ export const auctionWorker = new Worker(
       .orderBy("bid.amount", "DESC")
       .getOne();
 
-    if (!highestBid) {
-      console.error("No bids found for product:", productId);
-      return;
+    if (highestBid) {
+      product.status = ProductStatus.SOLD;
+      product.winner = { id: highestBid.bidder.id } as any;
+      product.current_highest_bid = Number(highestBid.amount);
+
+      await productRepo.save(product);
+
+      console.log(`✅ Sold to ${highestBid.bidder.id}`);
+
+      await notificationQueue.add("notify", {
+        type: "auction_ended",
+        productId,
+        sellerId: product.seller?.id,
+        winnerId: highestBid.bidder.id,
+        finalAmount: Number(highestBid.amount),
+      });
+    } else {
+      product.status = ProductStatus.EXPIRED;
+      await productRepo.save(product);
+
+      console.log("❌ No bids — auction expired");
+
+      await notificationQueue.add("notify", {
+        type: "auction_ended",
+        productId,
+        sellerId: product.seller?.id,
+      });
     }
 
-    product.status = ProductStatus.SOLD;
-    product.winner = { id: highestBid.bidder.id } as any;
-    product.current_highest_bid = highestBid.amount;
-    await productRepo.save(product);
-
-    console.log("Aunction ended and winner is: ", highestBid.bidder.id);
+    // 🧹 Invalidate Redis cache
+    /*
+    await redisClient.del(`product:${productId}`);
+    await redisClient.del(`highest_bid:${productId}`);
+    await redisClient.del("products:approved");
+    */
   },
   {
     connection: redisConnection,
   },
 );
-
 export const notificationWorker = new Worker(
   "notification-queue",
   async (job) => {
