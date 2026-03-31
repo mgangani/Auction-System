@@ -9,7 +9,7 @@ import {
   Body,
 } from "tsoa";
 import { ManagerService } from "./manager.service";
-import { UserRole } from "../../types/enums";
+import { ProductStatus, UserRole } from "../../types/enums";
 
 @Route("api/manager/products")
 @Tags("Manager")
@@ -22,13 +22,8 @@ export class ManagerController extends Controller {
     return this.service.getPendingProducts();
   }
 
-  @Patch("/:id/approve")
-  async approveProduct(@Path() id: string) {
-    return this.service.approveProduct(id);
-  }
-
-  @Patch("/:id/reject")
-  async rejectProduct(@Path() id: string, @Body() body: { reason?: string }) {
-    return this.service.rejectProduct(id, body.reason);
+  @Patch('/:id/status')
+  async updateProductStatus(@Path() id: string, @Body() body: { status: ProductStatus }) {
+    return this.service.updateProductStatus(id, body.status);
   }
 }

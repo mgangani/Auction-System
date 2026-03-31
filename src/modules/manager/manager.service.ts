@@ -17,7 +17,11 @@ export class ManagerService {
     return { data: products, total };
   }
 
-  async approveProduct(productId: string) {
+  async updateProductStatus(
+    productId: string,
+    status: ProductStatus,
+    reason?: string,
+  ) {
     const product = await productRepo.findOne({
       where: { id: productId },
       relations: ["seller"],
@@ -27,73 +31,79 @@ export class ManagerService {
       throw new Error("Product not found");
     }
 
+    // ✅ Only allow transition from PENDING
     if (product.status !== ProductStatus.PENDING) {
-      throw new Error("Only pending products can be approved");
+      throw new Error("Only pending products can be updated");
     }
 
-    if (new Date(product.bidding_end_time) <= new Date()) {
-      throw new Error("Cannot approve expired product");
-    }
+    // ✅ Handle APPROVAL
+    if (status === ProductStatus.APPROVED) {
+      if (new Date(product.bidding_end_time) <= new Date()) {
+        throw new Error("Cannot approve expired product");
+      }
 
-    product.status = ProductStatus.APPROVED;
-    await productRepo.save(product);
+      product.status = ProductStatus.APPROVED;
+      await productRepo.save(product);
 
-    // 🧠 Schedule auction end job
-    const delay = new Date(product.bidding_end_time).getTime() - Date.now();
+      // 🧠 Schedule auction end job
+      const delay = new Date(product.bidding_end_time).getTime() - Date.now();
 
-    if (delay > 0) {
-      await auctionQueue.add(
-        "end-auction",
-        { productId: product.id },
-        {
-          delay,
-          jobId: `auction-end-${productId}`,
-          removeOnComplete: true,
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 2000,
+      if (delay > 0) {
+        await auctionQueue.add(
+          "end-auction",
+          { productId: product.id },
+          {
+            delay,
+            jobId: `auction-end-${productId}`,
+            removeOnComplete: true,
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 2000,
+            },
           },
+        );
+      }
+
+      // 🔔 Notify seller
+      await notificationQueue.add(
+        "listing_approved",
+        {
+          type: "listing_approved",
+          productId: product.id,
+          sellerId: product.seller.id,
+        },
+        {
+          jobId: `notification-${product.id}`,
+          removeOnComplete: true,
         },
       );
+
+      // 🧹 Cache invalidation
+      await invalidatePattern("products:approved");
+      await redisConnection.del(`product:${productId}`);
+
+      return { message: "Product approved & auction scheduled" };
     }
 
-    await notificationQueue.add(
-      "listing_approved",
-      {
-        type: "listing_approved",
-        productId: product.id,
-        sellerId: product.seller.id,
-      },
-      {
-        jobId: `notification-${product.id}`,
-        removeOnComplete: true,
-      },
-    );
+    // ❌ Handle REJECTION
+    if (status === ProductStatus.REJECTED) {
+      product.status = ProductStatus.REJECTED;
 
-    await invalidatePattern("products:approved");
-    await redisConnection.del(`product:${productId}`);
-    return { message: "Product approved & auction scheduled" };
-  }
+      // (optional) you can store reason in DB if column exists
+      // product.rejection_reason = reason;
 
-  async rejectProduct(productId: string, reason?: string) {
-    const product = await productRepo.findOne({
-      where: { id: productId },
-    });
+      await productRepo.save(product);
 
-    if (!product) {
-      throw new Error("Product not found");
+      // 🔔 (optional) notify seller for rejection
+      // await notificationQueue.add(...)
+
+      await redisConnection.del(`product:${productId}`);
+
+      return { message: "Product rejected" };
     }
 
-    if (product.status !== ProductStatus.PENDING) {
-      throw new Error("Only pending products can be rejected");
-    }
-
-    product.status = ProductStatus.REJECTED;
-    await productRepo.save(product);
-
-    // await invalidatePattern(`product:${productId}`);
-
-    return { message: "Product rejected" };
+    // ❌ Invalid status
+    throw new Error("Invalid status update");
   }
 }
