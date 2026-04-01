@@ -1,12 +1,16 @@
 import { AppDataSource } from "../../config/database";
 import { Bid } from "../../entity/Bid";
 import { Product } from "../../entity/Product";
+import { User } from "../../entity/User";
 import { ProductStatus } from "../../types/enums";
-import { getOrSet } from "../../utils/cache";
+import { getOrSet, invalidatePattern } from "../../utils/cache";
 import { CreateProductDto } from "./products.dto";
 import { cloudinary } from "../../config/cloudinary";
+import { redisConnection } from "../../config/redis";
+import { notificationQueue } from "../../jobs";
 
 const productRepo = AppDataSource.getRepository(Product);
+const bidRepo = AppDataSource.getRepository(Bid);
 
 export class ProductService {
   async getApprovedProducts() {
@@ -91,5 +95,65 @@ export class ProductService {
       where: { seller: { id: userId } },
       order: { created_at: "DESC" },
     });
+  }
+
+  async processAuctionEnd(productId: string): Promise<void> {
+    const product = await productRepo.findOne({
+      where: { id: productId },
+      relations: ["seller"],
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    if (product.status !== ProductStatus.APPROVED) {
+      console.log("Already processed or not eligible");
+      return;
+    }
+
+    const highestBid = await bidRepo
+      .createQueryBuilder("bid")
+      .leftJoinAndSelect("bid.bidder", "bidder")
+      .where("bid.product_id = :productId", { productId })
+      .orderBy("bid.amount", "DESC")
+      .getOne();
+
+    const clearProductCaches = async () => {
+      await redisConnection.del(`product:${productId}`);
+      await redisConnection.del(`highest_bid:${productId}`);
+      await invalidatePattern("products:approved");
+    };
+
+    if (highestBid?.bidder) {
+      product.status = ProductStatus.SOLD;
+      product.winner = { id: highestBid.bidder.id } as User;
+      product.current_highest_bid = Number(highestBid.amount);
+
+      await productRepo.save(product);
+      await clearProductCaches();
+
+      console.log(`✅ Sold to ${highestBid.bidder.id}`);
+
+      await notificationQueue.add("notify", {
+        type: "auction_ended",
+        productId,
+        sellerId: product.seller.id,
+        winnerId: highestBid.bidder.id,
+        finalAmount: Number(highestBid.amount),
+      });
+    } else {
+      product.status = ProductStatus.EXPIRED;
+      await productRepo.save(product);
+      await clearProductCaches();
+
+      console.log("❌ No bids — auction expired");
+
+      await notificationQueue.add("notify", {
+        type: "auction_ended",
+        productId,
+        sellerId: product.seller.id,
+      });
+    }
   }
 }

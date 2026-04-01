@@ -1,33 +1,19 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "../../config/redis";
-import { getIO } from "../../sockets";
+import { NotificationService } from "../../modules/notifications/notification.service";
 import { notificationQueue } from "./queue";
+import type { NotificationJobData } from "./types";
+
+const notificationService = new NotificationService();
 
 export const notificationWorker = new Worker(
   notificationQueue.name,
   async (job) => {
-    const io = getIO();
-    const data = job.data;
+    const data = job.data as NotificationJobData;
 
-    if (data.type === "listing_approved") {
-      io.to(`user:${data.sellerId}`).emit("listing_approved", {
-        productId: data.productId,
-      });
-    }
+    console.log("Notification worker received job", data);
 
-    if (data.type === "auction_ended") {
-      if (data.winnerId) {
-        io.to(`user:${data.winnerId}`).emit("auction_won", {
-          productId: data.productId,
-          amount: data.finalAmount!,
-        });
-      }
-
-      io.to(`user:${data.sellerId}`).emit("product_sold", {
-        productId: data.productId,
-        amount: data.finalAmount,
-      });
-    }
+    notificationService.dispatch(data);
   },
   {
     connection: redisConnection,
