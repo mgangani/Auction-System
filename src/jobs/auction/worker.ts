@@ -1,15 +1,15 @@
 import { Worker } from "bullmq";
-import { redisConnection } from "../config/redis";
-import { AppDataSource } from "../config/database";
-import { Product } from "../entity/Product";
-import { Bid } from "../entity/Bid";
-import { ProductStatus } from "../types/enums";
-import { notificationQueue } from "./queues";
-import { getIO } from "../sockets";
-import { invalidatePattern } from "../utils/cache";
+import { redisConnection } from "../../config/redis";
+import { AppDataSource } from "../../config/database";
+import { Product } from "../../entity/Product";
+import { Bid } from "../../entity/Bid";
+import { ProductStatus } from "../../types/enums";
+import { notificationQueue } from "../notification/queue";
+import { invalidatePattern } from "../../utils/cache";
+import { auctionQueue } from "./queue";
 
 export const auctionWorker = new Worker(
-  "auction-queue",
+  auctionQueue.name,
   async (job) => {
     if (job.name !== "end-auction") return;
 
@@ -78,36 +78,6 @@ export const auctionWorker = new Worker(
   },
   {
     connection: redisConnection,
-    concurrency: 10,
-  },
-);
-export const notificationWorker = new Worker(
-  "notification-queue",
-  async (job) => {
-    const io = getIO();
-    const data = job.data;
-
-    if (data.type === "listing_approved") {
-      io.to(`user:${data.sellerId}`).emit("listing_approved", {
-        productId: data.productId,
-      });
-    }
-
-    if (data.type === "auction_ended") {
-      if (data.winnerId) {
-        io.to(`user:${data.winnerId}`).emit("auction_won", {
-          productId: data.productId,
-          amount: data.finalAmount!,
-        });
-      }
-
-      io.to(`user:${data.sellerId}`).emit("product_sold", {
-        productId: data.productId,
-        amount: data.finalAmount,
-      });
-    }
-  },
-  {
-    connection: redisConnection,
+    concurrency: 2,
   },
 );

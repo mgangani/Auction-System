@@ -1,7 +1,7 @@
 import { AppDataSource } from "../../config/database";
 import { Product } from "../../entity/Product";
 import { ProductStatus } from "../../types/enums";
-import { auctionQueue, notificationQueue } from "../../jobs/queues";
+import { auctionQueue, notificationQueue } from "../../jobs";
 import { invalidatePattern } from "../../utils/cache";
 import { redisConnection } from "../../config/redis";
 

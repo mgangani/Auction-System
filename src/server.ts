@@ -18,7 +18,7 @@ async function startServer() {
     const server = http.createServer(app);
     initSocket(server);
 
-    require("./jobs/workers");
+    require("./jobs/start-workers");
 
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
